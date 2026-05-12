@@ -61,7 +61,7 @@ LOOI operates on a sequence-based BLE protocol. It is not a simple direct-drive 
 
 ### Connection Handshake
 
-Unfortunately, you cannot simply connect via NRF Connect and start sending commands immediately. The robot requires a handshake sequence initiated by the official app - If this handshake is missing, LOOI will disconnect after a few seconds.
+Unfortunately, you cannot simply connect via NRF Connect and start sending commands immediately. The robot requires a handshake sequence initiated by the official app (which, from my knowledge, simply asks the robot to output its available components) - If this handshake is missing, LOOI will disconnect after a few seconds. Spoofing a fake motor base is also possible.
 
 Connect via the official app first, background it (do not kill it), then connect from NRF connect. :-)
 
