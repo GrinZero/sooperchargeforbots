@@ -23,6 +23,8 @@ AI tools have been used to speed up and ASSIST (not replace) myself in the rever
 
 The stock LOOI application locks several features behind server-side configurations and hardware sensors. Through targeted Smali code manipulation, I have successfully bypassed some of these limits. As a response to my work, starting from the 2.6.1 update, TangibleFuture has implemented a paid (and expensive) version of the Jiagu 360 packer and obfuscator, making code on those versions much harder to access. Jiagu 360 was already implemented in older versions, but due to its configuration, it was not impacting code access in any way.
 
+Recently this year, after the TangibleFuture team has reviewed their decision, have chosen to give me access to development versions of the app, allowing me to work and debug much faster compared to the protected-app workflow.
+
 ### Update Check Bypass
 
 To permanently disable the forced update mechanism and prevent the application from hanging on the splash screen, I modified the version comparison logic within `UpgradeManager$tryUpgrade$2.smali`. The original code compared the server version integer against the local version using a conditional branch (`if-le`). I patched this instruction by replacing it with an unconditional jump (`goto`), forcing the execution flow to always bypass the "Update Available" logic. This hardwires the application to execute the "No Update Needed" callback path every time, allowing the splash screen to dismiss normally regardless of the actual server version.
