@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LOOI BLE 直控实验台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Azeret+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">SOOPERCHARGE DIRECT DRIVE LAB</p>
+        <h1>LOOI BLE 直控实验台</h1>
+        <p class="lead">
+          这版不再把 `fe00` 当成摇杆。主目标已经切换成验证官方遥控的真实通道：
+          `fed0` 控底盘、`fed1` 控头部、`fed2` 控大灯。
+        </p>
+        <div class="badges">
+          <span>底盘：`fed0`</span>
+          <span>头部：`fed1`</span>
+          <span>灯光：`fed2`</span>
+          <span>环境：Chrome / Android / localhost</span>
+        </div>
+      </section>
+
+      <section class="panel controls">
+        <div class="panel-head">
+          <h2>连接控制</h2>
+          <p>先握手，再进直控。所有写入和通知都会落到下面的日志里。</p>
+        </div>
+
+        <div class="actions">
+          <button id="connectBtn" class="primary">连接 LOOI</button>
+          <button id="handshakeBtn">执行握手</button>
+          <button id="sendFe00Btn">发送 `fe00`</button>
+          <button id="disconnectBtn">断开连接</button>
+          <button id="clearLogBtn">清空日志</button>
+        </div>
+
+        <div class="status-grid">
+          <div class="status-card">
+            <span class="label">连接状态</span>
+            <strong id="connState">未连接</strong>
+          </div>
+          <div class="status-card">
+            <span class="label">设备</span>
+            <strong id="deviceName">-</strong>
+          </div>
+          <div class="status-card">
+            <span class="label">GATT</span>
+            <strong id="gattState">-</strong>
+          </div>
+          <div class="status-card">
+            <span class="label">最近通知</span>
+            <strong id="lastNotify">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel payloads">
+        <div class="panel-head">
+          <h2>握手回放</h2>
+          <p>默认值来自当前已确认的 HCI 样本，可直接修改。</p>
+        </div>
+
+        <div class="payload-list">
+          <label>
+            <span>`feda` 第 1 次写入</span>
+            <input id="fedaFirstInput" value="03" spellcheck="false">
+          </label>
+          <label>
+            <span>`fef0` 初始化 20 字节</span>
+            <input id="fef0InitInput" value="4132303236203036203234203030203535203432" spellcheck="false">
+          </label>
+          <label>
+            <span>`feda` 第 2 次写入</span>
+            <input id="fedaSecondInput" value="8101" spellcheck="false">
+          </label>
+          <label>
+            <span>`fe00` 辅助包</span>
+            <input id="fe00Input" value="00100000010032030a0001ff00010a3203ff0003" spellcheck="false">
+          </label>
+        </div>
+      </section>
+
+      <section class="panel direct-lab">
+        <div class="panel-head">
+          <h2>底盘直控</h2>
+          <p>按住轮盘持续发 `fed0`。松手会自动补一帧 `0000`。</p>
+        </div>
+
+        <div class="direct-grid">
+          <div class="drive-stage">
+            <div class="drive-wheel" aria-label="底盘轮盘">
+              <button class="wheel-btn up" data-drive-key="forward">前进</button>
+              <button class="wheel-btn left" data-drive-key="left">左转</button>
+              <button class="wheel-btn center stop" id="driveStopBtn">STOP</button>
+              <button class="wheel-btn right" data-drive-key="right">右转</button>
+              <button class="wheel-btn down" data-drive-key="back">后退</button>
+            </div>
+
+            <div class="drive-readout">
+              <span>当前底盘状态</span>
+              <strong id="driveState">待机</strong>
+              <p id="driveHoldHint">按住轮盘可持续发 `fed0`，松手自动补 `0000`。</p>
+            </div>
+          </div>
+
+          <div class="direct-side">
+            <section class="subpanel head-panel">
+              <div class="subpanel-head">
+                <h3>头部俯仰</h3>
+                <p>`fed1` 单字节目标位。拖动滑杆即可发送。</p>
+              </div>
+              <div class="head-meter">
+                <label class="slider-wrap">
+                  <span>头部值</span>
+                  <input id="fed1Slider" type="range" min="0" max="255" value="135">
+                </label>
+                <label class="inline-input">
+                  <span>Hex</span>
+                  <input id="fed1Input" value="87" spellcheck="false">
+                </label>
+              </div>
+              <div class="head-actions">
+                <button id="headUpBtn" class="head-action" data-head-preset="up">抬头极限</button>
+                <button id="headCenterBtn" class="head-action" data-head-preset="neutral">中位</button>
+                <button id="headDownBtn" class="head-action" data-head-preset="down">低头极限</button>
+              </div>
+              <div class="mini-status">
+                <span>当前头部状态</span>
+                <strong id="headState">0x87</strong>
+              </div>
+            </section>
+
+            <section class="subpanel light-panel">
+              <div class="subpanel-head">
+                <h3>大灯</h3>
+                <p>`fed2 = 01` 开，`00` 关。</p>
+              </div>
+              <div class="light-actions">
+                <button id="lightOnBtn" class="light-action">开灯</button>
+                <button id="lightOffBtn" class="light-action">关灯</button>
+              </div>
+              <div class="mini-status">
+                <span>当前灯光状态</span>
+                <strong id="lightState">未切换</strong>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="control-editor direct-editor">
+          <label>
+            <span>`fed0` 当前方向值</span>
+            <input id="fed0Input" value="7707" spellcheck="false">
+          </label>
+          <label>
+            <span>`fed0` 停止值</span>
+            <input id="fed0StopInput" value="0000" spellcheck="false">
+          </label>
+        </div>
+      </section>
+
+      <section class="panel command-library">
+        <div class="panel-head">
+          <h2>历史动作样本</h2>
+          <p>保留旧 `fe00` / `fed2` 样本，方便继续做一次性动作验证。</p>
+        </div>
+
+        <div class="command-toolbar">
+          <label class="command-filter">
+            <span>筛选</span>
+            <input id="commandFilterInput" placeholder="输入关键词，例如 fe00 / light / script" spellcheck="false">
+          </label>
+        </div>
+
+        <div id="commandList" class="command-list"></div>
+      </section>
+
+      <section class="panel terminal">
+        <div class="panel-head">
+          <h2>实时日志</h2>
+          <p>通知值、连接状态、直控写入和异常信息都会显示在这里。</p>
+        </div>
+        <pre id="logView" aria-live="polite"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Local reverse-engineering artifacts
+work/
+work/bugreport/
+work/hci/
+work/hci_*/
+work/logs/
+work/miui_debug_log/
+
+# Large local app packages
+*.xapk
+*.apk
+
+# Optional local servers / caches
+.python-version
