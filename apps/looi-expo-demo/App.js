@@ -7,7 +7,7 @@ import {
   LooiRobot,
   bytesToHex,
   hexToBytes,
-} from "@soopercharge/looi-sdk";
+} from "@sourcebug/looi-sdk";
 
 function createExpoPreviewTransport(pushLog) {
   return {
@@ -54,7 +54,7 @@ export default function App() {
           <Text style={styles.eyebrow}>SOOPERCHARGE SDK</Text>
           <Text style={styles.title}>LOOI Expo Demo</Text>
           <Text style={styles.lead}>
-            This Expo app is the React Native consumer for @soopercharge/looi-sdk. It uses a preview
+            This Expo app is the React Native consumer for @sourcebug/looi-sdk. It uses a preview
             transport so the UI can run in Expo Go; swap the transport with a native BLE adapter for real robot control.
           </Text>
         </View>

@@ -1,6 +1,6 @@
 # LOOI Expo Demo
 
-Expo / React Native consumer demo for `@soopercharge/looi-sdk`.
+Expo / React Native consumer demo for `@sourcebug/looi-sdk`.
 
 The app intentionally starts with a **preview transport** so it can run in Expo Go without native BLE setup. The UI still exercises the real SDK client surface:
 
@@ -17,7 +17,7 @@ To turn this into real robot control, replace `createExpoPreviewTransport()` in 
 
 ```bash
 pnpm install
-pnpm --filter @soopercharge/looi-expo-demo dev
+pnpm --filter @sourcebug/looi-expo-demo dev
 ```
 
 Then open the project in Expo Go or a development build.

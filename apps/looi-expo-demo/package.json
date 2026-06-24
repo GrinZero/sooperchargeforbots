@@ -1,5 +1,5 @@
 {
-  "name": "@soopercharge/looi-expo-demo",
+  "name": "@sourcebug/looi-expo-demo",
   "version": "0.1.0-alpha.0",
   "private": true,
   "main": "expo/AppEntry.js",
@@ -12,7 +12,7 @@
     "check": "node --check App.js"
   },
   "dependencies": {
-    "@soopercharge/looi-sdk": "workspace:*"
+    "@sourcebug/looi-sdk": "workspace:*"
   },
   "devDependencies": {
     "expo": "^56.0.12",

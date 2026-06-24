@@ -1,4 +1,4 @@
-# @soopercharge/looi-sdk
+# @sourcebug/looi-sdk
 
 Experimental SDK surface for turning the currently confirmed LOOI BLE signals into reusable app primitives.
 
@@ -22,7 +22,7 @@ The package intentionally separates protocol logic from BLE implementation:
 ## Browser example
 
 ```js
-import { LooiRobot, WebBluetoothLooiTransport } from "@soopercharge/looi-sdk";
+import { LooiRobot, WebBluetoothLooiTransport } from "@sourcebug/looi-sdk";
 
 const robot = new LooiRobot(new WebBluetoothLooiTransport());
 

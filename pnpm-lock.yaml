@@ -14,7 +14,7 @@ importers:
 
   apps/looi-expo-demo:
     dependencies:
-      '@soopercharge/looi-sdk':
+      '@sourcebug/looi-sdk':
         specifier: workspace:*
         version: link:../../packages/looi-sdk
     devDependencies:
@@ -30,7 +30,7 @@ importers:
 
   apps/looi-web-demo:
     dependencies:
-      '@soopercharge/looi-sdk':
+      '@sourcebug/looi-sdk':
         specifier: workspace:*
         version: link:../../packages/looi-sdk
       rolldown:

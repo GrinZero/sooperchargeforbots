@@ -85,7 +85,7 @@ packages/looi-sdk/
   src/index.js
 ```
 
-`apps/looi-web-demo` 是第一个 Web SDK 消费者：它通过 workspace 依赖引入 `@soopercharge/looi-sdk`，复用 SDK 的 UUID、方向/头部/灯光常量和 hex 工具函数。
+`apps/looi-web-demo` 是第一个 Web SDK 消费者：它通过 workspace 依赖引入 `@sourcebug/looi-sdk`，复用 SDK 的 UUID、方向/头部/灯光常量和 hex 工具函数。
 
 `apps/looi-expo-demo` 是第一个 Expo / React Native SDK 消费者：它使用同一个 `LooiRobot` client 和一个 preview transport 展示连接、握手、底盘、头部与灯光 API；后续只需要把 preview transport 换成 BLE 原生 adapter。
 
@@ -110,7 +110,7 @@ SDK 包当前导出：
 Web 使用方式：
 
 ```js
-import { LooiRobot, WebBluetoothLooiTransport } from "@soopercharge/looi-sdk";
+import { LooiRobot, WebBluetoothLooiTransport } from "@sourcebug/looi-sdk";
 
 const robot = new LooiRobot(new WebBluetoothLooiTransport());
 await robot.connect();
@@ -121,7 +121,7 @@ robot.startDriveLoop("forward");
 React Native 使用方式：
 
 ```js
-import { LooiRobot } from "@soopercharge/looi-sdk";
+import { LooiRobot } from "@sourcebug/looi-sdk";
 import { createBlePlxLooiTransport } from "./looiBlePlxTransport";
 
 const robot = new LooiRobot(createBlePlxLooiTransport());
@@ -139,7 +139,7 @@ await robot.setLight(true);
 
 ## 下一步建议
 
-1. 把 Web demo 里的 BLE 操作逐步改为调用 `@soopercharge/looi-sdk`，避免协议逻辑继续散落在 UI 代码里。
+1. 把 Web demo 里的 BLE 操作逐步改为调用 `@sourcebug/looi-sdk`，避免协议逻辑继续散落在 UI 代码里。
 2. 把 Expo demo 的 preview transport 替换为 React Native BLE adapter 示例，优先覆盖连接、握手、写入和通知订阅。
 3. 给 `fed0` 做更干净的长按采样，再决定 SDK 是否暴露连续二维摇杆 API，例如 `driveVector(x, y)`。
 4. 给 `fed9` 建立事件解码器，逐步从 raw hex 变成 `dockChanged`、`batteryChanged` 之类的高层事件。

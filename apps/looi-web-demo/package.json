@@ -1,5 +1,5 @@
 {
-  "name": "@soopercharge/looi-web-demo",
+  "name": "@sourcebug/looi-web-demo",
   "version": "0.1.0-alpha.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "check": "node --check app.js"
   },
   "dependencies": {
-    "@soopercharge/looi-sdk": "workspace:*",
+    "@sourcebug/looi-sdk": "workspace:*",
     "vite": "^8.1.0",
     "rolldown": "^1.1.3"
   },

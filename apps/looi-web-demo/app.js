@@ -7,7 +7,7 @@ import {
   bytesToHex,
   hexToBytes,
   normalizeHex,
-} from "@soopercharge/looi-sdk";
+} from "@sourcebug/looi-sdk";
 
 
 const COMMANDS = [
@@ -751,7 +751,7 @@ els.commandFilterInput.addEventListener("input", renderCommands);
 state.logLines = [
   "LOOI Web Bluetooth 直控实验台已就绪。",
   "建议使用方式：",
-  "1. 电脑执行 npm run dev --workspace @soopercharge/looi-web-demo",
+  "1. 电脑执行 pnpm --filter @sourcebug/looi-web-demo dev",
   "2. 手机 USB 连电脑后执行 adb reverse tcp:5173 tcp:5173",
   "3. 手机 Chrome 打开 Vite 输出的本地地址，例如 http://127.0.0.1:5173",
   "4. 先连接并执行握手，再测试 fed0 / fed1 / fed2。",

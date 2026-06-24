@@ -28,8 +28,8 @@ This repository is now organized as a pnpm workspace managed by Turborepo.
 pnpm install
 pnpm check
 pnpm build
-pnpm --filter @soopercharge/looi-web-demo dev
-pnpm --filter @soopercharge/looi-expo-demo dev
+pnpm --filter @sourcebug/looi-web-demo dev
+pnpm --filter @sourcebug/looi-expo-demo dev
 ```
 
 ## About the app.
