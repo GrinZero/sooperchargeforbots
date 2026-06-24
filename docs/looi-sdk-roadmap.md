@@ -114,7 +114,6 @@ import { LooiRobot, WebBluetoothLooiTransport } from "@sourcebug/looi-sdk";
 
 const robot = new LooiRobot(new WebBluetoothLooiTransport());
 await robot.connect();
-await robot.handshake();
 robot.startDriveLoop("forward");
 ```
 
@@ -126,7 +125,6 @@ import { createBlePlxLooiTransport } from "./looiBlePlxTransport";
 
 const robot = new LooiRobot(createBlePlxLooiTransport());
 await robot.connect();
-await robot.handshake();
 await robot.setLight(true);
 ```
 
