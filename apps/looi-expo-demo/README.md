@@ -1,17 +1,14 @@
 # LOOI Expo Demo
 
-Expo / React Native consumer demo for `@sourcebug/looi-sdk`.
+这个 demo 对齐当前第一版 SDK 的 4 类核心能力：
 
-The app intentionally starts with a **preview transport** so it can run in Expo Go without native BLE setup. The UI still exercises the real SDK client surface:
-
-- `connect()`
-- `handshake()`
-- `drive(direction)`
-- `stop()`
-- `setHeadPreset(preset)`
+- `connect({ onDock, onRawNotify })`
+- `move(direction)` / `startMoveLoop(direction)` / `stop()`
+- `setHead(direction)`
 - `setLight(enabled)`
+- `writeRaw(characteristic, payloadHex)`
 
-To turn this into real robot control, replace `createExpoPreviewTransport()` in `App.js` with a native BLE transport that implements the SDK transport contract. A future adapter can use `react-native-ble-plx`, Expo Modules, or another BLE bridge.
+它仍然使用 preview transport，所以可以直接在 Expo Go 里跑界面。真正接机器人时，把 `App.js` 里的 `createExpoPreviewTransport()` 替换成原生 BLE adapter 即可。
 
 ## Run
 
@@ -19,5 +16,3 @@ To turn this into real robot control, replace `createExpoPreviewTransport()` in 
 pnpm install
 pnpm --filter @sourcebug/looi-expo-demo dev
 ```
-
-Then open the project in Expo Go or a development build.

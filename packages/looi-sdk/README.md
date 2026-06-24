@@ -1,64 +1,52 @@
 # @sourcebug/looi-sdk
 
-Experimental SDK surface for turning the currently confirmed LOOI BLE signals into reusable app primitives.
+LOOI 第一版 SDK 现在只保留 4 类核心能力：
 
-The package intentionally separates protocol logic from BLE implementation:
+1. 高层移动控制：前后左右，适合轮盘或长按按钮驱动
+2. 高层头部控制：抬头 / 中位 / 低头
+3. 简单灯光控制：开灯 / 关灯
+4. 吸附状态回调 + 原始特征值写入
 
-- `LooiRobot` owns handshake, drive, head, light and `fe00` helper methods.
-- `WebBluetoothLooiTransport` is a browser adapter for Chrome/Web Bluetooth.
-- React Native apps can provide the same small transport interface with libraries such as `react-native-ble-plx` without changing app-level robot code.
+SDK 仍然是 TypeScript 项目，并产出类型声明文件。
 
-## Current protocol surface
+## 核心 API
 
-| Feature | Characteristic | Write type | Payload |
-| --- | --- | --- | --- |
-| Handshake notify | `fed9`, `fef0` | notify | subscribe before init writes |
-| Handshake init | `feda`, `fef0`, `feda` | with response | `03`, dynamic `Ayyyy mm dd HH MM SS`, `8101` |
-| Drive | `fed0` | without response | 2-byte directional values |
-| Head pitch | `fed1` | without response | 1-byte target value |
-| Headlight | `fed2` | with response | `01` on, `00` off |
-| Script/action frames | `fe00` | with response | variable captured action frames |
-
-## Browser example
-
-```js
+```ts
 import { LooiRobot, WebBluetoothLooiTransport } from "@sourcebug/looi-sdk";
 
 const robot = new LooiRobot(new WebBluetoothLooiTransport());
 
-await robot.connect();
-await robot.handshake({
-  onFed9: ({ hex }) => console.log("fed9", hex),
+await robot.connect({
+  onDock: ({ docked }) => {
+    console.log("吸附状态", docked);
+  },
 });
 
-robot.startDriveLoop("forward");
-setTimeout(() => robot.stopDriveLoop(), 800);
-
-await robot.setHeadPreset("neutral");
+await robot.move("forward");
+robot.startMoveLoop("left");
+await robot.setHead("center");
 await robot.setLight(true);
+
+await robot.writeRaw("fe00", "00100000010032030a0001ff00010a3203ff0003", {
+  response: true,
+});
 ```
 
-## React Native adapter shape
+## 设计原则
 
-```js
-const transport = {
-  async connect() {
-    // Scan, connect, discover service/characteristics, cache handles.
-  },
-  async disconnect() {
-    // Close the platform BLE connection.
-  },
-  async startNotifications(characteristicKey, onValue) {
-    // Subscribe to fed9/fef0 and call onValue({ characteristic, bytes, hex }).
-  },
-  async write(characteristicKey, payloadHex, { response, expectedBytes }) {
-    // Validate/encode payloadHex and write to the cached characteristic.
-  },
-};
+- 默认暴露高层能力，不要求业务侧理解全部 BLE 协议细节
+- `connect()` 后默认立即握手
+- 吸附事件直接走 `onDock`
+- 只有在确实需要时，才通过 `writeRaw()` 直接操作 `fe00` / `fed2` / `feda` 这类通道
 
-const robot = new LooiRobot(transport);
-```
+## 导出内容
 
-## Status
-
-This is an alpha SDK boundary, not a stable npm release yet. The exported constants are based on current HCI findings and should stay easy to revise while `fed0` vector semantics and `fed1` calibration are still being mapped.
+- `LooiRobot`
+- `WebBluetoothLooiTransport`
+- `normalizeHex()`
+- `hexToBytes()`
+- `bytesToHex()`
+- `createInitTimeHex()`
+- `LOOI_MOVE_VALUES`
+- `LOOI_HEAD_VALUES`
+- `LOOI_LIGHT_VALUES`

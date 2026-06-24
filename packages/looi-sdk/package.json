@@ -3,19 +3,26 @@
   "version": "0.1.0-alpha.0",
   "description": "Experimental transport-agnostic SDK for controlling LOOI Robot over BLE.",
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "files": [
-    "src",
+    "dist",
     "README.md"
   ],
   "sideEffects": false,
   "license": "MIT",
   "scripts": {
-    "build": "node --check src/index.js",
-    "check": "node --check src/index.js"
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   },
   "publishConfig": {
     "access": "public",
