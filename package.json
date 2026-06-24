@@ -1,0 +1,13 @@
+{
+  "name": "sooperchargeforbots",
+  "private": true,
+  "packageManager": "pnpm@10.28.1",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check": "turbo check"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6"
+  }
+}

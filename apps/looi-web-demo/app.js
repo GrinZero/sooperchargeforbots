@@ -1,11 +1,14 @@
-const SERVICE_UUID = "000000ff-0000-1000-8000-00805f9b34fb";
-const FED0_UUID = "0000fed0-0000-1000-8000-00805f9b34fb";
-const FED1_UUID = "0000fed1-0000-1000-8000-00805f9b34fb";
-const FED2_UUID = "0000fed2-0000-1000-8000-00805f9b34fb";
-const FED9_UUID = "0000fed9-0000-1000-8000-00805f9b34fb";
-const FEDA_UUID = "0000feda-0000-1000-8000-00805f9b34fb";
-const FEF0_UUID = "0000fef0-0000-1000-8000-00805f9b34fb";
-const FE00_UUID = "0000fe00-0000-1000-8000-00805f9b34fb";
+import {
+  LOOI_CHARACTERISTICS,
+  LOOI_DRIVE_VALUES,
+  LOOI_HEAD_VALUES,
+  LOOI_LIGHT_VALUES,
+  LOOI_SERVICE_UUID,
+  bytesToHex,
+  hexToBytes,
+  normalizeHex,
+} from "@soopercharge/looi-sdk";
+
 
 const COMMANDS = [
   {
@@ -74,17 +77,17 @@ const COMMANDS = [
 ];
 
 const DRIVE_PRESETS = {
-  forward: { label: "前进", value: "7707" },
-  left: { label: "左转", value: "047a" },
-  back: { label: "后退", value: "86fc" },
-  right: { label: "右转", value: "0082" },
-  stop: { label: "停止", value: "0000" },
+  forward: { label: "前进", value: LOOI_DRIVE_VALUES.forward },
+  left: { label: "左转", value: LOOI_DRIVE_VALUES.left },
+  back: { label: "后退", value: LOOI_DRIVE_VALUES.back },
+  right: { label: "右转", value: LOOI_DRIVE_VALUES.right },
+  stop: { label: "停止", value: LOOI_DRIVE_VALUES.stop },
 };
 
 const HEAD_PRESETS = {
-  up: { label: "抬头极限", value: "00" },
-  neutral: { label: "头部中位", value: "87" },
-  down: { label: "低头极限", value: "ff" },
+  up: { label: "抬头极限", value: LOOI_HEAD_VALUES.up },
+  neutral: { label: "头部中位", value: LOOI_HEAD_VALUES.neutral },
+  down: { label: "低头极限", value: LOOI_HEAD_VALUES.down },
 };
 
 const DRIVE_KEY_MAP = {
@@ -216,30 +219,6 @@ function resetWheelKnob() {
   els.driveWheel?.classList.remove("is-engaged");
 }
 
-function normalizeHex(raw, expectedBytes = null) {
-  const clean = raw.replace(/\s+/g, "").trim().toLowerCase();
-  if (!clean || clean.length % 2 !== 0 || /[^0-9a-f]/i.test(clean)) {
-    throw new Error(`非法十六进制串: ${raw}`);
-  }
-  if (expectedBytes !== null && clean.length !== expectedBytes * 2) {
-    throw new Error(`期望 ${expectedBytes} 字节，实际是 ${clean.length / 2} 字节: ${raw}`);
-  }
-  return clean;
-}
-
-function hexToBytes(raw, expectedBytes = null) {
-  const clean = normalizeHex(raw, expectedBytes);
-  const bytes = new Uint8Array(clean.length / 2);
-  for (let i = 0; i < clean.length; i += 2) {
-    bytes[i / 2] = Number.parseInt(clean.slice(i, i + 2), 16);
-  }
-  return bytes;
-}
-
-function bytesToHex(bytes) {
-  return Array.from(bytes, (v) => v.toString(16).padStart(2, "0")).join("");
-}
-
 function emitFed9Hint(hex) {
   let hint = null;
   if (hex === "05") {
@@ -339,15 +318,15 @@ async function connectDevice(device) {
   setGattState("discovering");
   log("GATT 连接成功");
 
-  const service = await server.getPrimaryService(SERVICE_UUID);
+  const service = await server.getPrimaryService(LOOI_SERVICE_UUID);
   const [fed0, fed1, fed2, fed9, feda, fef0, fe00] = await Promise.all([
-    service.getCharacteristic(FED0_UUID),
-    service.getCharacteristic(FED1_UUID),
-    service.getCharacteristic(FED2_UUID),
-    service.getCharacteristic(FED9_UUID),
-    service.getCharacteristic(FEDA_UUID),
-    service.getCharacteristic(FEF0_UUID),
-    service.getCharacteristic(FE00_UUID),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.fed0),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.fed1),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.fed2),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.fed9),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.feda),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.fef0),
+    service.getCharacteristic(LOOI_CHARACTERISTICS.fe00),
   ]);
 
   state.chars = { fed0, fed1, fed2, fed9, feda, fef0, fe00 };
@@ -375,7 +354,7 @@ async function discover() {
     setConnState("请求设备");
     device = await navigator.bluetooth.requestDevice({
       filters: [{ name: "LOOI Robot" }],
-      optionalServices: [SERVICE_UUID],
+      optionalServices: [LOOI_SERVICE_UUID],
     });
     log("已通过设备选择器获取设备授权。");
   }
@@ -443,7 +422,7 @@ async function sendHeadlight(hex) {
   if (!fed2) {
     throw new Error("fed2 未准备好");
   }
-  await writeWithResponse(fed2, hex, "fed2");
+  await writeWithResponse(fed2, hex, `fed2:${hex === LOOI_LIGHT_VALUES.on ? "on" : "off"}`);
 }
 
 function stopDriveLoop(silent = false, options = {}) {
@@ -748,12 +727,12 @@ function bindHeadControls() {
 
 function bindLightControls() {
   els.lightOnBtn.addEventListener("click", () => guarded(async () => {
-    await sendHeadlight("01");
+    await sendHeadlight(LOOI_LIGHT_VALUES.on);
     setLightState("开启");
   }));
 
   els.lightOffBtn.addEventListener("click", () => guarded(async () => {
-    await sendHeadlight("00");
+    await sendHeadlight(LOOI_LIGHT_VALUES.off);
     setLightState("关闭");
   }));
 }
@@ -772,9 +751,9 @@ els.commandFilterInput.addEventListener("input", renderCommands);
 state.logLines = [
   "LOOI Web Bluetooth 直控实验台已就绪。",
   "建议使用方式：",
-  "1. 电脑执行 python3 -m http.server 8000 -d web",
-  "2. 手机 USB 连电脑后执行 adb reverse tcp:8000 tcp:8000",
-  "3. 手机 Chrome 打开 http://127.0.0.1:8000",
+  "1. 电脑执行 npm run dev --workspace @soopercharge/looi-web-demo",
+  "2. 手机 USB 连电脑后执行 adb reverse tcp:5173 tcp:5173",
+  "3. 手机 Chrome 打开 Vite 输出的本地地址，例如 http://127.0.0.1:5173",
   "4. 先连接并执行握手，再测试 fed0 / fed1 / fed2。",
   "",
 ];

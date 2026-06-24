@@ -19,6 +19,19 @@ AI tools have been used to speed up and ASSIST (not replace) myself in the rever
 
 ---
 
+
+## 🧰 Monorepo workflow
+
+This repository is now organized as a pnpm workspace managed by Turborepo.
+
+```bash
+pnpm install
+pnpm check
+pnpm build
+pnpm --filter @soopercharge/looi-web-demo dev
+pnpm --filter @soopercharge/looi-expo-demo dev
+```
+
 ## About the app.
 
 The stock LOOI application locks several features behind server-side configurations and hardware sensors. Through targeted Smali code manipulation, I have successfully bypassed some of these limits. As a response to my work, starting from the 2.6.1 update, TangibleFuture has implemented a paid (and expensive) version of the Jiagu 360 packer and obfuscator, making code on those versions much harder to access. Jiagu 360 was already implemented in older versions, but due to its configuration, it was not impacting code access in any way.
@@ -109,6 +122,10 @@ The command structure is GENERALLY a **17-byte packet**.
 ## 📂 Repository Contents
 
 * **/ble_sniffed**: Contains captured payloads from my sessions. You can try them out by yourself with the NRF Connect app for Android devices.
+* **/apps/looi-web-demo**: Web Bluetooth direct-control lab for validating `fed0` / `fed1` / `fed2` behavior from Chrome.
+* **/apps/looi-expo-demo**: Expo / React Native SDK consumer demo with a preview transport that can be swapped for a native BLE adapter.
+* **/packages/looi-sdk**: Experimental transport-agnostic SDK boundary for Web and React Native consumers.
+* **/docs/looi-sdk-roadmap.md**: SDK layering plan, API goals, and open protocol questions.
 
 ---
 
