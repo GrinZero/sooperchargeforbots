@@ -59,6 +59,17 @@
             <strong id="lastNotify">-</strong>
           </div>
         </div>
+
+        <div class="quick-log-card">
+          <div class="quick-log-head">
+            <div>
+              <span class="label">最近日志</span>
+              <strong>不用滚到底也能先看最近几条</strong>
+            </div>
+            <a class="jump-link" href="#terminalLog">完整日志</a>
+          </div>
+          <pre id="recentLogView" aria-live="polite"></pre>
+        </div>
       </section>
 
       <section class="panel payloads">
@@ -95,19 +106,25 @@
 
         <div class="direct-grid">
           <div class="drive-stage">
-            <div class="drive-wheel" aria-label="底盘轮盘">
-              <button class="wheel-btn up" data-drive-key="forward">前进</button>
-              <button class="wheel-btn left" data-drive-key="left">左转</button>
-              <button class="wheel-btn center stop" id="driveStopBtn">STOP</button>
-              <button class="wheel-btn right" data-drive-key="right">右转</button>
-              <button class="wheel-btn down" data-drive-key="back">后退</button>
+            <div class="drive-wheel" id="driveWheel" aria-label="底盘轮盘" role="application">
+              <div class="wheel-ring outer"></div>
+              <div class="wheel-ring inner"></div>
+              <div class="wheel-axis horizontal"></div>
+              <div class="wheel-axis vertical"></div>
+              <div class="wheel-knob" id="wheelKnob" aria-hidden="true"></div>
+              <div class="wheel-btn up" data-drive-key="forward">前进</div>
+              <div class="wheel-btn left" data-drive-key="left">左转</div>
+              <div class="wheel-btn right" data-drive-key="right">右转</div>
+              <div class="wheel-btn down" data-drive-key="back">后退</div>
+              <div class="wheel-center-label">拖拽判向</div>
             </div>
 
             <div class="drive-readout">
               <span>当前底盘状态</span>
               <strong id="driveState">待机</strong>
-              <p id="driveHoldHint">按住轮盘可持续发 `fed0`，松手自动补 `0000`。</p>
+              <p id="driveHoldHint">在轮盘任意位置按下后拖拽，松手自动补 `0000`。</p>
             </div>
+            <button class="stop-drive-btn" id="driveStopBtn">立即 STOP</button>
           </div>
 
           <div class="direct-side">
@@ -182,7 +199,7 @@
         <div id="commandList" class="command-list"></div>
       </section>
 
-      <section class="panel terminal">
+      <section class="panel terminal" id="terminalLog">
         <div class="panel-head">
           <h2>实时日志</h2>
           <p>通知值、连接状态、直控写入和异常信息都会显示在这里。</p>

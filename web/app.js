@@ -8,6 +8,62 @@ const FEF0_UUID = "0000fef0-0000-1000-8000-00805f9b34fb";
 const FE00_UUID = "0000fe00-0000-1000-8000-00805f9b34fb";
 
 const COMMANDS = [
+  {
+    name: "吸附触发 028202 第 1 帧",
+    charKey: "fe00",
+    payload: "0000000002003203020002023203051e02092802",
+    desc: "2026-06-24 12:43 最新 HCI：手机吸附后，官方 App 启动 `action:028202` 的第 1 帧。",
+    tags: ["fe00", "dock", "sensor", "028202", "frame-1"],
+    verified: true,
+  },
+  {
+    name: "吸附触发 028202 第 2 帧",
+    charKey: "fe00",
+    payload: "01000b5003101e02130002145f0332000235eb02",
+    desc: "2026-06-24 12:43 最新 HCI：`action:028202` 第 2 帧。",
+    tags: ["fe00", "dock", "sensor", "028202", "frame-2"],
+    verified: true,
+  },
+  {
+    name: "吸附触发 028202 第 3 帧",
+    charKey: "fe00",
+    payload: "020039eb023c00024500024814024f1402520002",
+    desc: "2026-06-24 12:43 最新 HCI：`action:028202` 第 3 帧。",
+    tags: ["fe00", "dock", "sensor", "028202", "frame-3"],
+    verified: true,
+  },
+  {
+    name: "吸附触发 028202 第 4 帧",
+    charKey: "fe00",
+    payload: "03006c00026e5f0370e10274460375d7027ae102",
+    desc: "2026-06-24 12:43 最新 HCI：`action:028202` 第 4 帧。",
+    tags: ["fe00", "dock", "sensor", "028202", "frame-4"],
+    verified: true,
+  },
+  {
+    name: "吸附触发 028202 第 5 帧",
+    charKey: "fe00",
+    payload: "04007d0002ff00027d3203ff0003",
+    desc: "2026-06-24 12:43 最新 HCI：`action:028202` 第 5 帧，序列收尾。",
+    tags: ["fe00", "dock", "sensor", "028202", "frame-5"],
+    verified: true,
+  },
+  {
+    name: "吸附触发 清理包 A",
+    charKey: "fe00",
+    payload: "000001ff0001",
+    desc: "2026-06-24 12:43 最新 HCI：`action:028202` 之后的短清理包，样本中出现 2 次。",
+    tags: ["fe00", "dock", "sensor", "cleanup"],
+    verified: true,
+  },
+  {
+    name: "吸附触发 回正包",
+    charKey: "fe00",
+    payload: "00030000010032030a0001ff00010a3203ff0003",
+    desc: "2026-06-24 12:43 最新 HCI：吸附动作结束后的姿态回正包。",
+    tags: ["fe00", "dock", "sensor", "cleanup", "neutral"],
+    verified: true,
+  },
   { name: "前冲动作脚本", charKey: "fe00", payload: "0e0e57ff050000005999015900050000005b3201", desc: "旧 `fe00` 样本，仍保留为单次动作实验。", tags: ["fe00", "forward", "script"], verified: false },
   { name: "后冲动作脚本", charKey: "fe00", payload: "0a0e42260142ff05000000449901440005000000", desc: "旧 `fe00` 后退样本。", tags: ["fe00", "back", "script"], verified: false },
   { name: "左转动作脚本", charKey: "fe00", payload: "0202640002641e036aeb0271eb0273320379f502", desc: "旧 `fe00` 左转样本。", tags: ["fe00", "left", "script"], verified: true },
@@ -47,11 +103,13 @@ const state = {
   server: null,
   chars: {},
   notifyBound: new Set(),
+  fed9HintsSeen: new Set(),
   busy: false,
   driveTimer: null,
   driveKey: null,
   activePointerId: null,
   headValue: "87",
+  logLines: [],
 };
 
 const els = {
@@ -65,6 +123,7 @@ const els = {
   gattState: document.querySelector("#gattState"),
   lastNotify: document.querySelector("#lastNotify"),
   logView: document.querySelector("#logView"),
+  recentLogView: document.querySelector("#recentLogView"),
   fedaFirstInput: document.querySelector("#fedaFirstInput"),
   fef0InitInput: document.querySelector("#fef0InitInput"),
   fedaSecondInput: document.querySelector("#fedaSecondInput"),
@@ -84,7 +143,13 @@ const els = {
   lightOnBtn: document.querySelector("#lightOnBtn"),
   lightOffBtn: document.querySelector("#lightOffBtn"),
   lightState: document.querySelector("#lightState"),
+  driveWheel: document.querySelector("#driveWheel"),
+  wheelKnob: document.querySelector("#wheelKnob"),
 };
+
+const RECENT_LOG_LIMIT = 6;
+const DRIVE_MIN_DISTANCE = 26;
+const DRIVE_KNOB_MAX_OFFSET_RATIO = 0.26;
 
 function nowLabel() {
   return new Date().toLocaleTimeString("zh-CN", { hour12: false });
@@ -92,8 +157,11 @@ function nowLabel() {
 
 function log(message) {
   const line = `[${nowLabel()}] ${message}`;
-  els.logView.textContent += `${line}\n`;
+  state.logLines.push(line);
+  els.logView.textContent = `${state.logLines.join("\n")}\n`;
+  els.recentLogView.textContent = state.logLines.slice(-RECENT_LOG_LIMIT).join("\n");
   els.logView.scrollTop = els.logView.scrollHeight;
+  els.recentLogView.scrollTop = els.recentLogView.scrollHeight;
 }
 
 function setConnState(text) {
@@ -125,6 +193,7 @@ function resetState(reason = "idle") {
   state.server = null;
   state.chars = {};
   state.notifyBound = new Set();
+  state.fed9HintsSeen = new Set();
   els.lastNotify.textContent = "-";
   setDriveState("待机");
   setHeadState(`0x${state.headValue}`);
@@ -137,6 +206,14 @@ function resetState(reason = "idle") {
     setGattState("-");
   }
   updateButtons();
+}
+
+function resetWheelKnob() {
+  if (!els.wheelKnob) {
+    return;
+  }
+  els.wheelKnob.style.transform = "translate(-50%, -50%)";
+  els.driveWheel?.classList.remove("is-engaged");
 }
 
 function normalizeHex(raw, expectedBytes = null) {
@@ -161,6 +238,26 @@ function hexToBytes(raw, expectedBytes = null) {
 
 function bytesToHex(bytes) {
   return Array.from(bytes, (v) => v.toString(16).padStart(2, "0")).join("");
+}
+
+function emitFed9Hint(hex) {
+  let hint = null;
+  if (hex === "05") {
+    hint = "实验性判定: fed9=05，和官方 App 的“当前已吸附”回调时间点高度重合。";
+  } else if (hex === "06") {
+    hint = "实验性判定: fed9=06，样本里出现在吸附动作收尾后的阶段切换。";
+  } else if (hex === "070000") {
+    hint = "实验性判定: fed9=070000，样本里出现在吸附触发动作的短收尾阶段。";
+  } else if (hex === "070300") {
+    hint = "实验性判定: fed9=070300，样本里出现在吸附触发动作完成后的后续状态。";
+  }
+
+  if (!hint || state.fed9HintsSeen.has(hex)) {
+    return;
+  }
+
+  state.fed9HintsSeen.add(hex);
+  log(hint);
 }
 
 function updateButtons() {
@@ -198,6 +295,9 @@ async function startNotify(characteristic, label) {
       const hex = bytesToHex(bytes);
       els.lastNotify.textContent = `${label}: ${hex}`;
       log(`通知 ${label}: ${hex}`);
+      if (label === "fed9") {
+        emitFed9Hint(hex);
+      }
     });
     state.notifyBound.add(label);
   }
@@ -346,7 +446,8 @@ async function sendHeadlight(hex) {
   await writeWithResponse(fed2, hex, "fed2");
 }
 
-function stopDriveLoop(silent = false) {
+function stopDriveLoop(silent = false, options = {}) {
+  const { preservePointer = false, preserveKnob = false } = options;
   if (state.driveTimer) {
     clearInterval(state.driveTimer);
     state.driveTimer = null;
@@ -356,9 +457,14 @@ function stopDriveLoop(silent = false) {
   }
   const prev = state.driveKey;
   state.driveKey = null;
-  state.activePointerId = null;
+  if (!preservePointer) {
+    state.activePointerId = null;
+  }
   setDriveState("待机");
-  els.driveHoldHint.textContent = "按住轮盘可持续发 `fed0`，松手自动补 `0000`。";
+  els.driveHoldHint.textContent = "在轮盘任意位置按下后拖拽，松手自动补 `0000`。";
+  if (!preserveKnob) {
+    resetWheelKnob();
+  }
   if (!silent && prev && isConnected()) {
     guarded(async () => {
       await sendDriveValue(els.fed0StopInput.value);
@@ -396,6 +502,59 @@ function startDriveLoop(key, pointerId = null) {
       await sendDriveValue(DRIVE_PRESETS[key].value);
     });
   }, 110);
+}
+
+function moveWheelKnob(clientX, clientY) {
+  if (!els.driveWheel || !els.wheelKnob) {
+    return;
+  }
+
+  const rect = els.driveWheel.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const dx = clientX - centerX;
+  const dy = clientY - centerY;
+  const maxOffset = rect.width * DRIVE_KNOB_MAX_OFFSET_RATIO;
+  const distance = Math.hypot(dx, dy);
+  const scale = distance > maxOffset && distance > 0 ? maxOffset / distance : 1;
+  const offsetX = dx * scale;
+  const offsetY = dy * scale;
+  els.wheelKnob.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+  els.driveWheel.classList.add("is-engaged");
+}
+
+function getDriveKeyFromPoint(clientX, clientY) {
+  if (!els.driveWheel) {
+    return null;
+  }
+
+  const rect = els.driveWheel.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const dx = clientX - centerX;
+  const dy = clientY - centerY;
+
+  if (Math.hypot(dx, dy) < DRIVE_MIN_DISTANCE) {
+    return null;
+  }
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return dx > 0 ? "right" : "left";
+  }
+
+  return dy > 0 ? "back" : "forward";
+}
+
+function updateDriveFromPointer(clientX, clientY, pointerId) {
+  moveWheelKnob(clientX, clientY);
+  const key = getDriveKeyFromPoint(clientX, clientY);
+  if (!key) {
+    if (state.driveKey) {
+      stopDriveLoop(false, { preservePointer: true, preserveKnob: true });
+    }
+    return;
+  }
+  startDriveLoop(key, pointerId);
 }
 
 function syncHeadInputs(hex) {
@@ -495,32 +654,31 @@ async function guarded(action) {
 }
 
 function bindDriveControls() {
-  for (const button of document.querySelectorAll("[data-drive-key]")) {
-    const key = button.dataset.driveKey;
-    const handleStart = (event) => {
-      event.preventDefault();
-      button.setPointerCapture?.(event.pointerId);
-      startDriveLoop(key, event.pointerId);
-    };
-    const handleEnd = (event) => {
-      if (state.driveKey !== key) {
-        return;
-      }
-      if (state.activePointerId !== null && event.pointerId !== state.activePointerId) {
-        return;
-      }
-      event.preventDefault();
-      stopDriveLoop();
-    };
-    button.addEventListener("pointerdown", handleStart);
-    button.addEventListener("pointerup", handleEnd);
-    button.addEventListener("pointercancel", handleEnd);
-    button.addEventListener("pointerleave", (event) => {
-      if (state.activePointerId === event.pointerId) {
-        stopDriveLoop();
-      }
-    });
-  }
+  els.driveWheel?.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    els.driveWheel.setPointerCapture?.(event.pointerId);
+    state.activePointerId = event.pointerId;
+    updateDriveFromPointer(event.clientX, event.clientY, event.pointerId);
+  });
+
+  els.driveWheel?.addEventListener("pointermove", (event) => {
+    if (state.activePointerId !== event.pointerId) {
+      return;
+    }
+    event.preventDefault();
+    updateDriveFromPointer(event.clientX, event.clientY, event.pointerId);
+  });
+
+  const handleWheelEnd = (event) => {
+    if (state.activePointerId !== event.pointerId) {
+      return;
+    }
+    event.preventDefault();
+    stopDriveLoop();
+  };
+
+  els.driveWheel?.addEventListener("pointerup", handleWheelEnd);
+  els.driveWheel?.addEventListener("pointercancel", handleWheelEnd);
 
   document.querySelector("#driveStopBtn")?.addEventListener("click", (event) => {
     event.preventDefault();
@@ -605,11 +763,13 @@ els.handshakeBtn.addEventListener("click", () => guarded(runHandshake));
 els.sendFe00Btn.addEventListener("click", () => guarded(sendFe00));
 els.disconnectBtn.addEventListener("click", disconnect);
 els.clearLogBtn.addEventListener("click", () => {
+  state.logLines = [];
   els.logView.textContent = "";
+  els.recentLogView.textContent = "";
 });
 els.commandFilterInput.addEventListener("input", renderCommands);
 
-els.logView.textContent = [
+state.logLines = [
   "LOOI Web Bluetooth 直控实验台已就绪。",
   "建议使用方式：",
   "1. 电脑执行 python3 -m http.server 8000 -d web",
@@ -617,7 +777,9 @@ els.logView.textContent = [
   "3. 手机 Chrome 打开 http://127.0.0.1:8000",
   "4. 先连接并执行握手，再测试 fed0 / fed1 / fed2。",
   "",
-].join("\n");
+];
+els.logView.textContent = `${state.logLines.join("\n")}\n`;
+els.recentLogView.textContent = state.logLines.slice(-RECENT_LOG_LIMIT).join("\n");
 
 syncHeadInputs("87");
 renderCommands();
@@ -625,3 +787,4 @@ bindDriveControls();
 bindHeadControls();
 bindLightControls();
 resetState();
+resetWheelKnob();
