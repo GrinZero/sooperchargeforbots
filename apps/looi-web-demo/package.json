@@ -1,0 +1,17 @@
+{
+  "name": "@sourcebug/looi-web-demo",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "check": "node --check app.js"
+  },
+  "dependencies": {
+    "@sourcebug/looi-sdk": "workspace:*",
+    "vite": "^8.1.0",
+    "rolldown": "^1.1.3"
+  },
+  "devDependencies": {}
+}

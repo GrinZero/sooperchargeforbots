@@ -1,0 +1,22 @@
+{
+  "name": "@sourcebug/looi-expo-demo",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build": "node --check App.js",
+    "check": "node --check App.js"
+  },
+  "dependencies": {
+    "@sourcebug/looi-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "expo": "^56.0.12",
+    "react": "^19.2.7",
+    "react-native": "^0.86.0"
+  }
+}

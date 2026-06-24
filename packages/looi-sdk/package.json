@@ -1,0 +1,24 @@
+{
+  "name": "@sourcebug/looi-sdk",
+  "version": "0.1.0-alpha.0",
+  "description": "Experimental transport-agnostic SDK for controlling LOOI Robot over BLE.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "license": "MIT",
+  "scripts": {
+    "build": "node --check src/index.js",
+    "check": "node --check src/index.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

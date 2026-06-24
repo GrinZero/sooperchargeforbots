@@ -15,3 +15,9 @@ work/miui_debug_log/
 
 # Optional local servers / caches
 .python-version
+
+# Node / Turborepo
+node_modules/
+.turbo/
+dist/
+apps/*/dist/

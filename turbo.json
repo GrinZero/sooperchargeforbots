@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "@sourcebug/looi-sdk#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "check": {
+      "dependsOn": [
+        "^check"
+      ]
+    },
+    "@sourcebug/looi-expo-demo#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    }
+  }
+}
