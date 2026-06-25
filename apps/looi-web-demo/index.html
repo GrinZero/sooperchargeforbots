@@ -3,116 +3,197 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LOOI SDK Web Demo</title>
+    <title>SOOPERCHARGE LOOI Agent</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Azeret+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <div class="backdrop"></div>
-    <main class="shell">
+    <div class="noise"></div>
+    <div class="halo halo-a"></div>
+    <div class="halo halo-b"></div>
+
+    <main class="app-shell">
       <section class="hero">
-        <p class="eyebrow">SOOPERCHARGE SDK</p>
-        <h1>LOOI Web Demo</h1>
-        <p class="lead">
-          这一版只保留第一版 SDK 的核心能力：移动、头部、灯光、吸附回调，以及必要时的原始写入。
-        </p>
-        <div class="badges">
-          <span>移动</span>
-          <span>头部</span>
-          <span>灯光</span>
-          <span>吸附回调</span>
-          <span>Raw Write</span>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head">
-          <h2>连接与状态</h2>
-          <p>连接后会立即握手，并开始监听吸附状态。</p>
-        </div>
-        <div class="actions">
-          <button id="connectBtn" class="primary">连接 LOOI</button>
-          <button id="replayHandshakeBtn">重放握手</button>
-          <button id="disconnectBtn">断开连接</button>
-          <button id="clearLogBtn">清空日志</button>
-        </div>
-        <div class="status-grid">
-          <div class="status-card">
-            <span class="label">连接状态</span>
-            <strong id="connState">未连接</strong>
-          </div>
-          <div class="status-card">
-            <span class="label">设备</span>
-            <strong id="deviceName">-</strong>
-          </div>
-          <div class="status-card">
-            <span class="label">吸附状态</span>
-            <strong id="dockState">unknown</strong>
-          </div>
-          <div class="status-card">
-            <span class="label">最近通知</span>
-            <strong id="lastNotify">-</strong>
+        <div class="hero-copy">
+          <p class="eyebrow">SOOPERCHARGE AGENT SHELL</p>
+          <h1>LOOI Browser Pilot</h1>
+          <p class="lead">
+            用浏览器先把 Agent 产品态跑起来：连接机器人、识别语音、调用 Answer Bridge、流式渲染 Markdown，并把回复质量映射成表情和动作。
+          </p>
+          <div class="hero-tags">
+            <span>Web Bluetooth</span>
+            <span>Speech Input</span>
+            <span>Markdown Stream</span>
+            <span>Face State Machine</span>
+            <span>Answer Bridge</span>
           </div>
         </div>
+
+        <section class="face-stage">
+          <div class="screen-frame docked" id="faceFrame" data-face="idle">
+            <div class="face-screen">
+              <div class="face-glow"></div>
+              <div class="face-eyes">
+                <span class="eye left"></span>
+                <span class="eye right"></span>
+              </div>
+              <div class="face-mouth" id="faceMouth"></div>
+              <div class="face-caption">
+                <span id="faceLabel">Idle</span>
+                <strong id="faceStatus">waiting for dock</strong>
+              </div>
+            </div>
+            <div class="robot-base">
+              <div class="base-light" id="baseLight"></div>
+            </div>
+          </div>
+        </section>
       </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>移动控制</h2>
-          <p>适合接轮盘或长按按钮。持续移动会自动循环发送。</p>
-        </div>
-        <div class="actions">
-          <button data-move="forward">前进</button>
-          <button data-move="left">左转</button>
-          <button data-move="back">后退</button>
-          <button data-move="right">右转</button>
-          <button id="startLoopBtn">持续左转</button>
-          <button id="stopBtn">停止</button>
-        </div>
-      </section>
+      <section class="grid">
+        <section class="panel panel-primary">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Session</p>
+              <h2>Connect & Presence</h2>
+            </div>
+            <div class="status-pill" id="connState">disconnected</div>
+          </div>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>头部与灯光</h2>
-          <p>头部用高层方向值，灯光只提供开关。</p>
-        </div>
-        <div class="actions">
-          <button data-head="up">抬头</button>
-          <button data-head="center">中位</button>
-          <button data-head="down">低头</button>
-          <button id="lightOnBtn">开灯</button>
-          <button id="lightOffBtn">关灯</button>
-        </div>
-      </section>
+          <div class="button-row">
+            <button id="connectBtn" class="button button-accent">Connect LOOI</button>
+            <button id="replayHandshakeBtn" class="button">Replay Handshake</button>
+            <button id="disconnectBtn" class="button button-ghost">Disconnect</button>
+          </div>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>原始写入</h2>
-          <p>仅在需要直接写入 `fe00` / `fed2` / `feda` 时使用。</p>
-        </div>
-        <div class="payload-list">
-          <label>
-            <span>Characteristic</span>
-            <input id="rawCharacteristicInput" value="fe00" spellcheck="false">
-          </label>
-          <label>
-            <span>Payload Hex</span>
-            <input id="rawPayloadInput" value="00100000010032030a0001ff00010a3203ff0003" spellcheck="false">
-          </label>
-        </div>
-        <div class="actions">
-          <button id="sendRawBtn">发送 Raw Write</button>
-        </div>
-      </section>
+          <div class="stats">
+            <article class="stat-card">
+              <span>Device</span>
+              <strong id="deviceName">-</strong>
+            </article>
+            <article class="stat-card">
+              <span>Dock</span>
+              <strong id="dockState">unknown</strong>
+            </article>
+            <article class="stat-card">
+              <span>Last Notify</span>
+              <strong id="lastNotify">-</strong>
+            </article>
+            <article class="stat-card">
+              <span>Expression</span>
+              <strong id="expressionState">idle</strong>
+            </article>
+          </div>
 
-      <section class="panel terminal">
-        <div class="panel-head">
-          <h2>实时日志</h2>
-          <p>连接、回调、写入和异常都会显示在这里。</p>
-        </div>
-        <pre id="logView" aria-live="polite"></pre>
+          <div class="capabilities">
+            <div class="capability">
+              <span>Microphone</span>
+              <strong id="micCapability">unknown</strong>
+            </div>
+            <div class="capability">
+              <span>Camera</span>
+              <strong id="cameraCapability">unknown</strong>
+            </div>
+            <div class="capability">
+              <span>Source Direction</span>
+              <strong id="directionCapability">planned</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Agent</p>
+              <h2>Listen, Search, Respond</h2>
+            </div>
+            <div class="status-pill status-soft" id="agentState">standby</div>
+          </div>
+
+          <div class="composer">
+            <label class="field">
+              <span>User transcript</span>
+              <textarea id="promptInput" rows="4" placeholder="说一句话，或者点击 Start Listening 直接用语音输入。"></textarea>
+            </label>
+
+            <div class="button-row">
+              <button id="listenBtn" class="button button-accent">Start Listening</button>
+              <button id="stopListenBtn" class="button">Stop Listening</button>
+              <button id="askBtn" class="button">Ask Answer Bridge</button>
+              <button id="simulateBadBtn" class="button button-warn">Simulate Bad Answer</button>
+            </div>
+
+            <label class="field">
+              <span>Answer Bridge URL</span>
+              <input id="answerEndpointInput" value="http://localhost:8787/answer" spellcheck="false">
+            </label>
+
+            <label class="field">
+              <span>Knowledge hint / MCP context</span>
+              <input id="knowledgeHintInput" value="product-knowledge" spellcheck="false">
+            </label>
+          </div>
+        </section>
+
+        <section class="panel answer-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Stream</p>
+              <h2>Markdown Answer</h2>
+            </div>
+            <button id="clearAnswerBtn" class="button button-ghost">Clear</button>
+          </div>
+
+          <div class="answer-meta">
+            <span id="answerQuality">quality: pending</span>
+            <span id="answerSource">source: mock stream</span>
+          </div>
+
+          <article id="answerView" class="answer-view" aria-live="polite"></article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Robot Tools</p>
+              <h2>High-Level Actions</h2>
+            </div>
+            <button id="lightToggleBtn" class="button">Toggle Light</button>
+          </div>
+
+          <div class="tool-grid">
+            <button class="button" data-tool="greet">Greet</button>
+            <button class="button" data-tool="focus-user">Face User</button>
+            <button class="button" data-tool="thinking">Thinking Pose</button>
+            <button class="button" data-tool="celebrate">Celebrate</button>
+            <button class="button button-warn" data-tool="apology">Apology</button>
+            <button class="button" data-tool="reset">Reset</button>
+          </div>
+
+          <div class="manual-grid">
+            <button class="button" data-move="forward">Forward</button>
+            <button class="button" data-move="left">Left</button>
+            <button class="button" data-move="back">Back</button>
+            <button class="button" data-move="right">Right</button>
+            <button class="button" data-head="up">Head Up</button>
+            <button class="button" data-head="center">Head Center</button>
+            <button class="button" data-head="down">Head Down</button>
+            <button id="stopBtn" class="button button-ghost">Stop</button>
+          </div>
+        </section>
+
+        <section class="panel panel-terminal">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Runtime</p>
+              <h2>Logs</h2>
+            </div>
+            <button id="clearLogBtn" class="button button-ghost">Clear Log</button>
+          </div>
+          <pre id="logView"></pre>
+        </section>
       </section>
     </main>
 

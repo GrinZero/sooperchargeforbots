@@ -1,73 +1,65 @@
 # 进度记录
 
-## 当前目标
+## 当前结论
 
-把 LOOI 的“可自由操控”链路坐实，重点是：
+本轮已确认：浏览器方案可以作为当前主实现路径，`apps/looi-web-demo` 已从基础 SDK demo 升级为浏览器版 LOOI Agent shell。
 
-- 前进
-- 后退
-- 左转
-- 右转
-- 抬头
-- 低头
-- 大灯开关
+原因：
 
-不是继续堆 `fe00` 动作样本，而是确认官方 App 遥控时真正使用的直控通道和最小可用值。
+- `packages/looi-sdk` 已具备可用的 Web Bluetooth 适配层
+- 浏览器更容易先跑通 Agent UI、语音输入、Markdown 回答流和表情状态机
+- 用户已接受“如果这一款不行，换成其他能在浏览器跑的也可以”
 
-## 当前状态
+## 已验证完成
 
-- 最小 BLE 握手已坐实，并已可在 Web Bluetooth 里独立复现。
-- 高层动作库 `action.json` 已确认存在，且更像“动作 DSL / 轨迹脚本”，不是底盘直控包。
-- 本轮新的关键突破：
-  - 官方 App 的连续遥控主通道不是 `fe00`
-  - 已从新 HCI 坐实：
-    - `fed0` = 底盘连续控制
-    - `fed1` = 头部连续控制
-    - `fed2` = 大灯开关
-- 当前结论文档：
-  - `docs/looi-ble-findings.md`
-  - `docs/looi-direct-control-findings.md`
+### SDK / BLE 基础
 
-## 已确认结论
-
-- 握手仍是：
+- 最小 BLE 握手链路已坐实，并已在 Web Bluetooth 中可复现：
   - 订阅 `fed9`
   - 订阅 `fef0`
   - 写 `feda = 03`
   - 写 `fef0 = ASCII 时间串`
   - 写 `feda = 8101`
-- `fe00` 仍会在运行期出现，但更像：
-  - 单次动作脚本
-  - 姿态/模式辅助包
-- 官方遥控样本里：
-  - `fed0` 用 `Write Command` 高频发 2 字节值
-  - `fed1` 用 `Write Command` 高频发 1 字节值
-  - `fed2 = 01` 开灯
-  - `fed2 = 00` 关灯
+- 已确认高频直控通道：
+  - `fed0` = 底盘连续控制
+  - `fed1` = 头部连续控制
+  - `fed2` = 大灯开关
 
-## 当前阻塞点
+### 浏览器应用
 
-- `fed0` 的 2 字节编码语义还没完全拆清：
-  - 可能是双电机值
-  - 也可能是二维摇杆编码
-- `fed1` 基本可判为头部俯仰目标值，但还没做线性标定。
-- Web 端之前按 `fe00` 做的“持续轮盘”模型已被证伪，需要改成 `fed0/fed1/fed2` 版本。
+- `apps/looi-web-demo` 已重构为产品态浏览器壳，而不是原始控制面板
+- 已完成：
+  - LOOI 风格 face screen
+  - 可切换表情状态机：`idle / listening / thinking / searching / speaking / happy / apology`
+  - 高层 LOOI tools：`greet / focus-user / thinking / celebrate / apology / reset`
+  - 文本提问与语音输入入口
+  - `answer` bridge URL 配置
+  - Markdown 回答渲染
+  - 图片 Markdown 渲染
+  - JSON / plain text / SSE 风格流式返回处理
+  - bad-answer 判定后切换“抱歉”表情并执行低头 / 关灯联动
+  - 摄像头 / 麦克风 / 声源定位 capability 状态展示
+
+### 校验
+
+- `pnpm --filter @sourcebug/looi-web-demo check` 已通过
+- `pnpm --filter @sourcebug/looi-web-demo build` 已通过
+
+## 当前风险 / 未完成
+
+- `answer` 正式接口仍未提供，因此当前仍保留本地 mock fallback 路径
+- 浏览器端“声源定位”目前只是 capability hook，不是完整可用的真实朝向系统
+- `fed0` 的 2 字节编码语义仍未完全形式化，当前仍使用已验证候选值：
+  - 前：`7707`
+  - 左：`047a`
+  - 后：`86fc`
+  - 右：`0082`
+  - 停：`0000`
+- Expo App 主线尚未完成；当前是明确转向浏览器方案推进产品验证
 
 ## 下一步
 
-1. 把 Web 控制页从 `fe00` 轮盘改成真正的直控实验台：
-   - `fed0` 前后左右
-   - `fed1` 头部滑杆
-   - `fed2` 大灯开关
-2. 先用本轮抓到的稳态候选值做第一版：
-   - 前：`7707`
-   - 左：`047a`
-   - 后：`86fc`
-   - 右：`0082`
-   - 停：`0000`
-3. 如果第一版仍不够平滑，再单独抓一轮更干净的官方 RC：
-   - 只长按前
-   - 只长按左
-   - 只长按后
-   - 只长按右
-   - 只拖动头部
+1. 接正式 `answer` / MCP bridge
+2. 根据 bridge 返回协议补强图片块、引用块和更细的流式事件格式
+3. 把“声源定位 -> 头部朝向 / 主动转向用户”从占位能力接成真实控制链路
+4. 视需要决定是否回填一个更轻的 Expo 壳，仅作为浏览器版方案的补充
